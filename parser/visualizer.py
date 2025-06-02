@@ -3,7 +3,8 @@ from graphviz import Digraph
 def visualizar_lr0(states, transitions, filename="lr0_automaton"):
     dot = Digraph(format='png')
     dot.attr(rankdir='LR', size='10,8')
-
+    dot.attr(dpi='300')
+    
     for i, state in enumerate(states):
         label = f"I{i}\n"
         for lhs, rhs, dot_pos in state:
