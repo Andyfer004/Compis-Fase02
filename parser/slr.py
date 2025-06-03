@@ -146,7 +146,7 @@ def parsear_cadena(tokens, tabla, producciones, log_path):
             estado = stack[-1]
             stack.append(tabla['goto'][estado][lhs])
         elif accion[0] == 'accept':
-            print("✅ Cadena aceptada.")
+            # print("✅ Cadena aceptada.")
             mensaje = f"✅ Cadena aceptada."
             with open(log_path, 'a', encoding='utf-8') as f:
                 f.write(mensaje + '\n')

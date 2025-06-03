@@ -51,10 +51,11 @@ def evaluar_archivo(path_txt, afd_path, yalp_path):
     print(f"Producciones leídas: {producciones}")
 
     base_filename = os.path.splitext(os.path.basename(yalp_path))[0]
-    output_dir = os.path.join(base_filename, base_filename)
+    output_dir = base_filename  # o, si prefieres: os.path.join('output', base_filename)
     os.makedirs(output_dir, exist_ok=True)
-    log_path = os.path.join(output_dir, 'resultados.txt')
+    log_path = os.path.join(output_dir, f'{base_filename}.txt')
     filename = os.path.join(output_dir, base_filename)
+
 
     # Construir tabla SLR y visualizar el autómata
     tabla, estados, transiciones = construir_tabla_slr(producciones, tokens_yalp)
@@ -69,7 +70,7 @@ def evaluar_archivo(path_txt, afd_path, yalp_path):
             try:
                 lista_tokens = lexer(linea, afd, mapping, debug=False)
                 entrada = [t for t, _ in lista_tokens if t != 'WHITESPACE']
-                print(f"\nEvaluando: {linea}")
+                # print(f"\nEvaluando: {linea}")
                 mensaje = f"\nEvaluando: {linea}"
                 with open(log_path, 'a', encoding='utf-8') as f:
                     f.write(mensaje + '\n')
