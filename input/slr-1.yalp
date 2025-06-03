@@ -3,6 +3,14 @@
 %token TIMES
 %token LPAREN
 %token RPAREN
+%token SEMICOLON
+
+%%
+
+input:
+    expression SEMICOLON
+  | input expression SEMICOLON
+;
 
 expression:
     expression PLUS term
