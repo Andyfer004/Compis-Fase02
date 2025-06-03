@@ -126,7 +126,7 @@ def construir_tabla_slr(productions, tokens):
 
     return {'action': dict(action), 'goto': dict(goto_table)}, states, transitions
 
-def parsear_cadena(tokens, tabla, producciones):
+def parsear_cadena(tokens, tabla, producciones, log_path):
     stack = [0]
     tokens.append('$')
     i = 0
@@ -147,4 +147,7 @@ def parsear_cadena(tokens, tabla, producciones):
             stack.append(tabla['goto'][estado][lhs])
         elif accion[0] == 'accept':
             print("✅ Cadena aceptada.")
+            mensaje = f"✅ Cadena aceptada."
+            with open(log_path, 'a', encoding='utf-8') as f:
+                f.write(mensaje + '\n')
             return

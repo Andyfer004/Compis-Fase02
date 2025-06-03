@@ -1,14 +1,9 @@
 import os
 from graphviz import Digraph
 
-def visualizar_lr0(states, transitions, yalp_path):
-    # Extraer solo el nombre del archivo sin extensión
-    base_filename = os.path.splitext(os.path.basename(yalp_path))[0]
-    # Crear carpeta (si no existe)
-    output_dir = os.path.join('base_filename', base_filename)
-    os.makedirs(output_dir, exist_ok=True)
-
-    filename = os.path.join(output_dir, base_filename)
+def visualizar_lr0(states, transitions, filename):
+    
+ 
     
     dot = Digraph(format='png')
     dot.attr(rankdir='LR', size='10,8')

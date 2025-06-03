@@ -50,14 +50,16 @@ def evaluar_archivo(path_txt, afd_path, yalp_path):
     print(f"Tokens leídos: {tokens_yalp}")
     print(f"Producciones leídas: {producciones}")
 
-    # Construir tabla SLR y visualizar el autómata
-    tabla, estados, transiciones = construir_tabla_slr(producciones, tokens_yalp)
-    visualizar_lr0(estados, transiciones,yalp_path)
     base_filename = os.path.splitext(os.path.basename(yalp_path))[0]
-    output_dir = os.path.join('output', base_filename)
+    output_dir = os.path.join(base_filename, base_filename)
     os.makedirs(output_dir, exist_ok=True)
     log_path = os.path.join(output_dir, 'resultados.txt')
+    filename = os.path.join(output_dir, base_filename)
 
+    # Construir tabla SLR y visualizar el autómata
+    tabla, estados, transiciones = construir_tabla_slr(producciones, tokens_yalp)
+    visualizar_lr0(estados, transiciones,filename)
+    
     # Leer archivo de entrada y evaluar cada línea
     with open(path_txt, 'r') as f:
         for linea in f:
@@ -71,6 +73,6 @@ def evaluar_archivo(path_txt, afd_path, yalp_path):
                 mensaje = f"\nEvaluando: {linea}"
                 with open(log_path, 'a', encoding='utf-8') as f:
                     f.write(mensaje + '\n')
-                parsear_cadena(entrada, tabla, producciones,)
+                parsear_cadena(entrada, tabla, producciones,log_path)
             except Exception as e:
                 print(f"❌ Error: {e}")
