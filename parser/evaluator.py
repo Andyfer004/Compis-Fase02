@@ -71,6 +71,6 @@ def evaluar_archivo(path_txt, afd_path, yalp_path):
                 mensaje = f"\nEvaluando: {linea}"
                 with open(log_path, 'a', encoding='utf-8') as f:
                     f.write(mensaje + '\n')
-                parsear_cadena(entrada, tabla, producciones)
+                parsear_cadena(entrada, tabla, producciones,)
             except Exception as e:
                 print(f"❌ Error: {e}")
