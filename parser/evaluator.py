@@ -3,6 +3,7 @@ from parser.slr import construir_tabla_slr, parsear_cadena
 from parser.visualizer import visualizar_lr0
 from afd_serializer import cargar_afd_pickle
 from lexer import lexer
+import os
 
 def limpiar_mapping(mapping):
     """
@@ -51,7 +52,11 @@ def evaluar_archivo(path_txt, afd_path, yalp_path):
 
     # Construir tabla SLR y visualizar el autómata
     tabla, estados, transiciones = construir_tabla_slr(producciones, tokens_yalp)
-    visualizar_lr0(estados, transiciones)
+    visualizar_lr0(estados, transiciones,yalp_path)
+    base_filename = os.path.splitext(os.path.basename(yalp_path))[0]
+    output_dir = os.path.join('output', base_filename)
+    os.makedirs(output_dir, exist_ok=True)
+    log_path = os.path.join(output_dir, 'resultados.txt')
 
     # Leer archivo de entrada y evaluar cada línea
     with open(path_txt, 'r') as f:
@@ -63,6 +68,9 @@ def evaluar_archivo(path_txt, afd_path, yalp_path):
                 lista_tokens = lexer(linea, afd, mapping, debug=False)
                 entrada = [t for t, _ in lista_tokens if t != 'WHITESPACE']
                 print(f"\nEvaluando: {linea}")
+                mensaje = f"\nEvaluando: {linea}"
+                with open(log_path, 'a', encoding='utf-8') as f:
+                    f.write(mensaje + '\n')
                 parsear_cadena(entrada, tabla, producciones)
             except Exception as e:
                 print(f"❌ Error: {e}")
