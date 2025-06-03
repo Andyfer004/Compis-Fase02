@@ -1,5 +1,5 @@
 from parser.grammar_parser import parse_yalp_file
-from parser.slr import construir_tabla_slr, parsear_cadena
+from parser.slr import construir_tabla_slr, parsear_cadena,exportar_tabla_slr
 from parser.visualizer import visualizar_lr0
 from afd_serializer import cargar_afd_pickle
 from lexer import lexer
@@ -60,7 +60,9 @@ def evaluar_archivo(path_txt, afd_path, yalp_path):
     # Construir tabla SLR y visualizar el autómata
     tabla, estados, transiciones = construir_tabla_slr(producciones, tokens_yalp)
     visualizar_lr0(estados, transiciones,filename)
-    
+    tabla_txt_path = os.path.join(output_dir, 'tabla_slr.txt')
+    exportar_tabla_slr(tabla, tabla_txt_path)
+
     # Leer archivo de entrada y evaluar cada línea
     with open(path_txt, 'r') as f:
         for linea in f:

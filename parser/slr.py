@@ -151,3 +151,19 @@ def parsear_cadena(tokens, tabla, producciones, log_path):
             with open(log_path, 'a', encoding='utf-8') as f:
                 f.write(mensaje + '\n')
             return
+        
+def exportar_tabla_slr(tabla, filename='tabla_slr.txt'):
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write("🔽 TABLA SLR(1)\n\n")
+
+        f.write("📌 ACTION:\n")
+        for estado in sorted(tabla['action']):
+            for simbolo in sorted(tabla['action'][estado]):
+                accion = tabla['action'][estado][simbolo]
+                f.write(f"  ACTION[{estado}, {simbolo}] = {accion}\n")
+
+        f.write("\n📌 GOTO:\n")
+        for estado in sorted(tabla['goto']):
+            for simbolo in sorted(tabla['goto'][estado]):
+                destino = tabla['goto'][estado][simbolo]
+                f.write(f"  GOTO[{estado}, {simbolo}] = {destino}\n")

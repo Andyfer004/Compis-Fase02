@@ -46,3 +46,27 @@ Evaluando: y := x + 1;
 
 Evaluando: z := 3 + 2 * (x + y) < 10 + 5;
 ✅ Cadena aceptada.
+
+Evaluando: x := 3;
+✅ Cadena aceptada.
+
+Evaluando: y := 4 + 2;
+✅ Cadena aceptada.
+
+Evaluando: a := (2 + 3) * 5;
+✅ Cadena aceptada.
+
+Evaluando: b := x < 9;
+✅ Cadena aceptada.
+
+Evaluando: c := 1 + 2 * 3 < 10;
+✅ Cadena aceptada.
+
+Evaluando: x := 3;
+✅ Cadena aceptada.
+
+Evaluando: y := x + 1;
+✅ Cadena aceptada.
+
+Evaluando: z := 3 + 2 * (x + y) < 10 + 5;
+✅ Cadena aceptada.
