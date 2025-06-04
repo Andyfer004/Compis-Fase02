@@ -103,6 +103,7 @@ def construir_tabla_slr(productions, tokens):
     follow = compute_follow(augmented, first, start)
     action = defaultdict(dict)
     goto_table = defaultdict(dict)
+    conflictos = []
 
     for i, I in enumerate(states):
         for lhs, rhs, dot in I:
@@ -111,18 +112,36 @@ def construir_tabla_slr(productions, tokens):
                 if a in tokens:
                     j = transitions.get((i, a))
                     if j is not None:
-                        action[i][a] = ('shift', j)
+                        existente = action[i].get(a)
+                        nueva = ('shift', j)
+                        if existente and existente != nueva:
+                            conflictos.append((i, a, existente, nueva))
+                        action[i][a] = nueva
             else:
                 if lhs == start:
-                    action[i]['$'] = ('accept',)
+                    existente = action[i].get('$')
+                    nueva = ('accept',)
+                    if existente and existente != nueva:
+                        conflictos.append((i, '$', existente, nueva))
+                    action[i]['$'] = nueva
                 else:
                     for a in follow[lhs]:
-                        action[i][a] = ('reduce', lhs, rhs)
+                        existente = action[i].get(a)
+                        nueva = ('reduce', lhs, rhs)
+                        if existente and existente != nueva:
+                            conflictos.append((i, a, existente, nueva))
+                        action[i][a] = nueva
 
         for A in productions:
             j = transitions.get((i, A))
             if j is not None:
                 goto_table[i][A] = j
+
+    # Imprimir conflictos encontrados
+    if conflictos:
+        print("\n🚨 Se detectaron conflictos en la tabla SLR:")
+        for estado, simbolo, act1, act2 in conflictos:
+            print(f"  - Estado {estado}, símbolo '{simbolo}': {act1} vs {act2}")
 
     return {'action': dict(action), 'goto': dict(goto_table)}, states, transitions
 

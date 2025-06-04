@@ -1,79 +1,119 @@
 def parse_yalp_file(filepath):
     tokens = set()
     productions = {}
-    current_lhs = None
+    ignore_tokens = set()
+    current_lhs = [None]
     accumulating_rules = []
+    in_productions = [False]
 
-    with open(filepath, 'r') as file:
-        lines = file.readlines()
+    def es_espacio(c):
+        return c in [' ', '\t']
 
-    in_productions = False
-
-    for idx, line in enumerate(lines, 1):
-        clean = line.strip()
-        print(f"[Línea {idx}] --> '{clean}'")
-
-        if not clean or clean.startswith('/*'):
-            continue
-
-        if clean.startswith('%token'):
-            new_tokens = clean.replace('%token', '').strip().split()
-            print(f"  ➕ Tokens encontrados: {new_tokens}")
-            tokens.update(new_tokens)
-            continue
-
-        if clean == '%%':
-            in_productions = True
-            continue
-
-        if ':' in clean:
-                # Guardar la producción anterior si la hay
-            if current_lhs and accumulating_rules:
-                productions[current_lhs] = accumulating_rules
-                print(f"  ✅ Cerrando producción {current_lhs}: {accumulating_rules}")
-            lhs, rhs = clean.split(':', 1)
-            current_lhs = lhs.strip()
-            in_productions = True
-            accumulating_rules = []
-
-            rhs = rhs.strip()
-            if rhs:  # Si hay una regla en la misma línea
-                rules = [r.strip().split() for r in rhs.split('|') if r.strip()]
-                accumulating_rules.extend(rules)
-                print(f"  📌 Nueva producción {current_lhs}: {rules}")
+    def dividir_palabras(texto):
+        palabra = ''
+        palabras = []
+        for c in texto:
+            if es_espacio(c):
+                if palabra:
+                    palabras.append(palabra)
+                    palabra = ''
             else:
-                print(f"  📌 Nueva producción {current_lhs}: [] (esperando reglas en siguientes líneas)")
-            continue
+                palabra += c
+        if palabra:
+            palabras.append(palabra)
+        return palabras
 
+    def limpiar_fin_linea(linea):
+        return ''.join(c for c in linea if c not in ['\r', '\n'])
 
-        if clean.startswith('|'):
-            rules = [r.strip().split() for r in clean.split('|') if r.strip()]
-            accumulating_rules.extend(rules)
-            print(f"  ➕ Reglas adicionales para {current_lhs}: {rules}")
-            continue
+    def agregar_reglas(rhs_texto):
+        alternativas = [alt for alt in rhs_texto.split('|') if alt]
+        for alt in alternativas:
+            palabras = dividir_palabras(alt)
+            if palabras:
+                accumulating_rules.append(palabras)
 
-        if clean == ';':
-            if current_lhs:
-                productions[current_lhs] = accumulating_rules
-                print(f"  ✅ Cerrando producción {current_lhs}: {accumulating_rules}")
-                current_lhs = None
-                accumulating_rules = []
-            continue
+    def process_line(linea, linea_num):
+        linea = limpiar_fin_linea(linea)
 
-        if in_productions and current_lhs:
-            rule = clean.split()
-            if rule:
-                accumulating_rules.append(rule)
-                print(f"  ➕ Regla agregada suelta para {current_lhs}: {rule}")
+        if not linea or linea.startswith('/*'):
+            return
 
-    # Guardar última producción si quedó algo
-    if current_lhs and accumulating_rules:
-        productions[current_lhs] = accumulating_rules
-        print(f"  ✅ Cerrando producción final {current_lhs}: {accumulating_rules}")
+        if linea.startswith('%token'):
+            contenido = linea[len('%token'):]
+            nuevos_tokens = dividir_palabras(contenido)
+            print(f"[Línea {linea_num}] ➕ Tokens encontrados: {nuevos_tokens}")
+            tokens.update(nuevos_tokens)
+            return
+
+        if linea.startswith('IGNORE'):
+            partes = dividir_palabras(linea)
+            if len(partes) == 2:
+                token_ignorado = partes[1]
+                ignore_tokens.add(token_ignorado)
+                print(f"[Línea {linea_num}] 🧽 Token a ignorar: {token_ignorado}")
+            return
+
+        if linea == '%%':
+            in_productions[0] = True
+            print(f"[Línea {linea_num}] ➖ Inicio de producciones")
+            return
+
+        if ':' in linea:
+            if current_lhs[0] and accumulating_rules:
+                productions[current_lhs[0]] = accumulating_rules[:]
+                print(f"[Línea {linea_num}] ✅ Cerrando producción {current_lhs[0]}: {accumulating_rules}")
+            lhs, rhs = linea.split(':', 1)
+            lhs = lhs.strip()
+            current_lhs[0] = lhs
+            accumulating_rules.clear()
+            agregar_reglas(rhs)
+            print(f"[Línea {linea_num}] 📌 Nueva producción {lhs}: {accumulating_rules}")
+            return
+
+        if linea.lstrip().startswith('|'):
+            contenido = linea.lstrip()[1:]
+            agregar_reglas(contenido)
+            print(f"[Línea {linea_num}] ➕ Reglas alternativas para {current_lhs[0]}: {contenido}")
+            return
+
+        if linea == ';':
+            if current_lhs[0]:
+                productions[current_lhs[0]] = accumulating_rules[:]
+                print(f"[Línea {linea_num}] ✅ Cerrando producción {current_lhs[0]}: {accumulating_rules}")
+                current_lhs[0] = None
+                accumulating_rules.clear()
+            return
+
+        if in_productions[0] and current_lhs[0]:
+            agregar_reglas(linea)
+            print(f"[Línea {linea_num}] ➕ Regla agregada suelta para {current_lhs[0]}: {linea}")
+
+    with open(filepath, 'r', encoding='utf-8') as f:
+        buffer = ''
+        linea_actual = 1
+        while True:
+            c = f.read(1)
+            if not c:
+                break
+            if c == '\n':
+                process_line(buffer, linea_actual)
+                buffer = ''
+                linea_actual += 1
+            else:
+                buffer += c
+        if buffer:
+            process_line(buffer, linea_actual)
+
+    if current_lhs[0] and accumulating_rules:
+        productions[current_lhs[0]] = accumulating_rules[:]
+        print(f"[Final] ✅ Cerrando producción final {current_lhs[0]}: {accumulating_rules}")
 
     if not productions:
         raise ValueError("❌ No se encontraron producciones válidas en el archivo .yalp")
 
     print("\n📦 Tokens finales:", tokens)
     print("📜 Producciones finales:", productions)
-    return tokens, productions
+    print("🧽 Tokens ignorados:", ignore_tokens)
+
+    return tokens, productions, ignore_tokens

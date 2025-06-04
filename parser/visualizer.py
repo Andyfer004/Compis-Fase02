@@ -1,10 +1,7 @@
 import os
 from graphviz import Digraph
 
-def visualizar_lr0(states, transitions, filename):
-    
- 
-    
+def visualizar_lr0(states, transitions, filename):   
     dot = Digraph(format='png')
     dot.attr(rankdir='LR', size='10,8')
     dot.attr(dpi='300')
