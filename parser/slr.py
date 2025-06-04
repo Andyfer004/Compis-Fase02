@@ -135,6 +135,15 @@ def parsear_cadena(tokens, tabla, producciones, log_path):
         t = tokens[i]
         accion = tabla['action'].get(estado, {}).get(t)
         if accion is None:
+
+            if (t == '$'): 
+                mensaje = f"❌ Cadena no aceptada: faltante ;."
+                with open(log_path, 'a', encoding='utf-8') as f:
+                    f.write(mensaje + '\n')
+            else: 
+                mensaje = f"❌ Cadena no aceptada: {t}."
+                with open(log_path, 'a', encoding='utf-8') as f:
+                    f.write(mensaje + '\n')
             raise SyntaxError(f"Token inesperado: {t}")
         if accion[0] == 'shift':
             stack.append(accion[1])
