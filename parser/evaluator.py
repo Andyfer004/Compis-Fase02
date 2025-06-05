@@ -52,14 +52,14 @@ def evaluar_archivo(path_txt, afd_path, yalp_path):
 
 def evaluar_expresion(expr, afd, mapping, tabla, producciones, log_path, ignore_tokens):
     try:
-        #print(f"\n🧪 Expresión: {expr.strip()}")
+        print(f"\n🧪 Expresión: {expr.strip()}")
         tokens = lexer(expr, afd, mapping, debug=True)
         entrada = [tok for tok, _ in tokens if tok not in ignore_tokens]
 
-        entrada.append('$')  # ✅ Agregar el símbolo de fin de entrada
+        entrada.append('$')  
 
-        #print(f"✅ Tokens que se enviarán al parser: {entrada}")
-        #print(f"🚫 Tokens ignorados: {ignore_tokens}")
+        print(f"✅ Tokens que se enviarán al parser: {entrada}")
+        print(f"🚫 Tokens ignorados: {ignore_tokens}")
         parsear_cadena(entrada, tabla, producciones, log_path)
     except Exception as e:
         with open(log_path, "a", encoding="utf-8") as f:
