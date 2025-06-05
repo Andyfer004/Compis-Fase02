@@ -2,7 +2,7 @@ from parser.evaluator import evaluar_archivo
 
 print("🔎 Variable expressions (Parser 1)")
 evaluar_archivo(
-    "input/4.txt",
-    "input/afd_min4.pkl",
-    "input/slr-4.yalp"
+    "input/1.txt",
+    "input/afd_min1.pkl",
+    "input/slr-1.yalp"
 )
