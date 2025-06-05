@@ -48,8 +48,10 @@ def compute_follow(productions, first, start_symbol):
 
 def augment_grammar(productions):
     start = list(productions.keys())[0]
+    print(f"🚩 Símbolo inicial detectado: {start}")  # ← AGREGA ESTA LÍNEA
     new_start = start + "'"
     return {new_start: [[start]], **productions}, new_start
+
 
 def closure(items, productions):
     closure_set = set(items)
@@ -146,39 +148,61 @@ def construir_tabla_slr(productions, tokens):
     return {'action': dict(action), 'goto': dict(goto_table)}, states, transitions
 
 def parsear_cadena(tokens, tabla, producciones, log_path):
-    stack = [0]
-    tokens.append('$')
-    i = 0
-    while True:
-        estado = stack[-1]
-        t = tokens[i]
-        accion = tabla['action'].get(estado, {}).get(t)
-        if accion is None:
+    """
+    Analiza la lista de tokens con la tabla SLR.
+    • Escribe en log_path cada paso del parser:
+        STACK […] | INPUT […] | ACTION …
+    • Al final añade “✅ Cadena aceptada.” o el mensaje de error.
+    (No necesitas tocar ningún otro archivo: la firma permanece igual.)
+    """
 
-            if (t == '$'): 
-                mensaje = f"❌ Cadena no aceptada: faltante ;."
-                with open(log_path, 'a', encoding='utf-8') as f:
-                    f.write(mensaje + '\n')
-            else: 
-                mensaje = f"❌ Cadena no aceptada: {t}."
-                with open(log_path, 'a', encoding='utf-8') as f:
-                    f.write(mensaje + '\n')
-            raise SyntaxError(f"Token inesperado: {t}")
-        if accion[0] == 'shift':
-            stack.append(accion[1])
-            i += 1
-        elif accion[0] == 'reduce':
-            lhs, rhs = accion[1], accion[2]
-            for _ in rhs:
-                stack.pop()
-            estado = stack[-1]
-            stack.append(tabla['goto'][estado][lhs])
-        elif accion[0] == 'accept':
-            # print("✅ Cadena aceptada.")
-            mensaje = f"✅ Cadena aceptada."
-            with open(log_path, 'a', encoding='utf-8') as f:
-                f.write(mensaje + '\n')
-            return
+    # ───── preparación ─────────────────────────────────────────────────────
+    pila = [0]                    # la pila guarda *estados* LR
+    tokens = tokens + ['$']       # no modifica la lista original
+    i = 0                         # índice del look-ahead
+
+    with open(log_path, 'a', encoding='utf-8') as log:
+        log.write("=== TRACE SLR(1) ===\n")
+
+        # ───── lazo principal ──────────────────────────────────────────────
+        while True:
+            estado = pila[-1]
+            t      = tokens[i]                # símbolo de entrada
+            accion = tabla['action'].get(estado, {}).get(t)
+
+            # registro paso a paso
+            log.write(f"STACK {pila} | INPUT {tokens[i:]} | ACTION {accion}\n")
+
+            # ───────── manejo de errores ─────────
+            if accion is None:
+                msg = f"❌ Cadena no aceptada: {t} inesperado.\n"
+                log.write(msg)
+                raise SyntaxError(f"Token inesperado: {t}")
+
+            # ───────── shift ─────────
+            if accion[0] == 'shift':
+                pila.append(accion[1])        # nuevo estado
+                i += 1
+                continue
+
+            # ───────── reduce A → β ─────────
+            if accion[0] == 'reduce':
+                lhs, rhs = accion[1], accion[2]
+
+                # sacar |β| estados de la pila
+                for _ in rhs:
+                    pila.pop()
+
+                goto_estado = tabla['goto'][pila[-1]][lhs]
+                pila.append(goto_estado)
+                log.write(f"   ↳ reduce {lhs} -> {' '.join(rhs)} "
+                          f"(goto {goto_estado})\n")
+                continue
+
+            # ───────── accept ─────────
+            if accion[0] == 'accept':
+                log.write("✅ Cadena aceptada.\n")
+                return
         
 def exportar_tabla_slr(tabla, filename='tabla_slr.txt'):
     with open(filename, 'w', encoding='utf-8') as f:

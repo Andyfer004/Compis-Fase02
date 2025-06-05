@@ -1,103 +1,67 @@
+import os
 from parser.grammar_parser import parse_yalp_file
-from parser.slr import construir_tabla_slr, parsear_cadena,exportar_tabla_slr
+from parser.slr import construir_tabla_slr, parsear_cadena, exportar_tabla_slr
 from parser.visualizer import visualizar_lr0
 from afd_serializer import cargar_afd_pickle
 from lexer import lexer
-import os
+
 
 def limpiar_mapping(mapping):
-    """
-    Elimina 'return ' al inicio de los valores del mapping si lo tiene.
-    """
-    return {
-        k: v.replace("return ", "").strip()
-        if isinstance(v, str) and v.startswith("return ")
-        else v
-        for k, v in mapping.items()
-    }
-
-def evaluar_archivo(path_txt, afd_path, yalp_path):
-    afd, mapping_archivo = cargar_afd_pickle(afd_path)
-
-    # Mapping limpio desde el pickle
-    original_mapping = limpiar_mapping(mapping_archivo)
-
-    # Mapeo manual de símbolos a tokens esperados por el parser
-    manual_mapping = {
-        'id': 'ID',
-        'number': 'NUMBER',
-        '+': 'PLUS',
-        '-': 'MINUS',
-        '*': 'TIMES',
-        '/': 'DIV',
-        '(': 'LPAREN',
-        ')': 'RPAREN',
-        ';': 'SEMICOLON',
-        ':=': 'ASSIGNOP',
-        '<': 'LT',
-        '=': 'EQ',
-        'WHITESPACE': 'ws'  # 🔧 Corrección aquí para alinear con IGNORE ws
-    }
-
-    # Mapping final usado por el lexer
-    mapping = {**original_mapping, **manual_mapping}
-
-    print("\n📦 Mapping final:")
-    for tag, tok in mapping.items():
-        print(f"  {tag} => {tok}")
-
-    # Cargar tokens y producciones desde el archivo .yalp
-    tokens_yalp, producciones, ignore_tokens = parse_yalp_file(yalp_path)
-    print(f"Tokens leídos: {tokens_yalp}")
-    print(f"Producciones leídas: {producciones}")
-    print(f"Tokens a ignorar: {ignore_tokens}")
-
-    base_filename = os.path.splitext(os.path.basename(yalp_path))[0]
-    output_dir = base_filename
-    os.makedirs(output_dir, exist_ok=True)
-    log_path = os.path.join(output_dir, f'{base_filename}.txt')
-    filename = os.path.join(output_dir, base_filename)
-
-    # Construir tabla SLR y visualizar el autómata
-    tabla, estados, transiciones = construir_tabla_slr(producciones, tokens_yalp)
-    visualizar_lr0(estados, transiciones, filename)
-    tabla_txt_path = os.path.join(output_dir, 'tabla_slr.txt')
-    exportar_tabla_slr(tabla, tabla_txt_path)
-
-    # Lectura manual de líneas desde archivo de entrada
-    with open(path_txt, 'r', encoding='utf-8') as f:
-        buffer = ''
-        while True:
-            c = f.read(1)
-            if not c:  # EOF
-                if buffer:
-                    evaluar_linea(buffer, afd, mapping, tabla, producciones, log_path, ignore_tokens)
-                break
-            if c == '\n':
-                if buffer and not solo_espacios(buffer):
-                    evaluar_linea(buffer, afd, mapping, tabla, producciones, log_path, ignore_tokens)
-                buffer = ''
-            else:
-                buffer += c
+    limpio = {}
+    for clave, valor in mapping.items():
+        if isinstance(valor, str) and valor.startswith("return "):
+            limpio[clave] = valor[7:]  # sin "return "
+        else:
+            limpio[clave] = valor
+    return limpio
 
 
-def solo_espacios(texto):
-    for c in texto:
-        if c not in [' ', '\t', '\r', '\n']:
+def solo_espacios(cadena):
+    for c in cadena:
+        if c not in [' ', '\t', '\n', '\r']:
             return False
     return True
 
 
-def evaluar_linea(linea, afd, mapping, tabla, producciones, log_path, ignore_tokens):
+def evaluar_archivo(path_txt, afd_path, yalp_path):
+    afd, raw_mapping = cargar_afd_pickle(afd_path)
+    mapping = limpiar_mapping(raw_mapping)
+
+    tokens_yalp, producciones, ignore_tokens, start_symbol = parse_yalp_file(yalp_path)
+
+    tabla, estados, transiciones = construir_tabla_slr(producciones, tokens_yalp)
+
+    base = os.path.splitext(os.path.basename(yalp_path))[0]
+    os.makedirs(base, exist_ok=True)
+
+    log_path = os.path.join(base, f"{base}.txt")
+    tabla_path = os.path.join(base, "tabla_slr.txt")
+    visualizar_lr0(estados, transiciones, os.path.join(base, base))
+    exportar_tabla_slr(tabla, tabla_path)
+
+    # Leer todo el contenido del archivo como una sola cadena
+    with open(path_txt, "r", encoding="utf-8") as f:
+        contenido = f.read()
+
+    # Si el contenido no está vacío o solo tiene espacios, evaluarlo todo junto
+    if not solo_espacios(contenido):
+        evaluar_expresion(
+            contenido, afd, mapping, tabla, producciones, log_path, ignore_tokens
+        )
+
+
+def evaluar_expresion(expr, afd, mapping, tabla, producciones, log_path, ignore_tokens):
     try:
-        lista_tokens = lexer(linea, afd, mapping, debug=False)
-        entrada = [
-            mapping.get(t, t)
-            for t, _ in lista_tokens
-            if mapping.get(t, t) not in ignore_tokens
-        ]
-        with open(log_path, 'a', encoding='utf-8') as f:
-            f.write(f"\nEvaluando: {linea}\n")
+        print(f"\n🧪 Expresión: {expr.strip()}")
+        tokens = lexer(expr, afd, mapping, debug=True)
+        entrada = [tok for tok, _ in tokens if tok not in ignore_tokens]
+
+        entrada.append('$')  # ✅ Agregar el símbolo de fin de entrada
+
+        print(f"✅ Tokens que se enviarán al parser: {entrada}")
+        print(f"🚫 Tokens ignorados: {ignore_tokens}")
         parsear_cadena(entrada, tabla, producciones, log_path)
     except Exception as e:
-        print(f"❌ Error al evaluar línea: {e}")
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(f"❌ Error: {e}\n")
+        print(f"❌ Error: {e}")
