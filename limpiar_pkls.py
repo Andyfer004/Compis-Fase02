@@ -1,11 +1,23 @@
 import pickle
 import os
 
+def quitar_espacios(s):
+    # Elimina espacios en blanco al inicio
+    i = 0
+    while i < len(s) and s[i].isspace():
+        i += 1
+    # Elimina espacios en blanco al final
+    j = len(s) - 1
+    while j >= 0 and s[j].isspace():
+        j -= 1
+    return s[i:j+1]
+
 def limpiar_mapping(mapping_sucio):
     limpio = {}
     for clave, valor in mapping_sucio.items():
         if isinstance(valor, str) and valor.startswith("return "):
-            limpio[clave] = valor.replace("return ", "").strip()
+            aux = valor[len("return "):]
+            limpio[clave] = quitar_espacios(aux)
         else:
             limpio[clave] = valor
     return limpio

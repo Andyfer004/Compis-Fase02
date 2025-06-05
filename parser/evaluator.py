@@ -52,7 +52,7 @@ def evaluar_archivo(path_txt, afd_path, yalp_path):
 
 def evaluar_expresion(expr, afd, mapping, tabla, producciones, log_path, ignore_tokens):
     try:
-        print(f"\n🧪 Expresión: {expr.strip()}")
+        print(f"\n🧪 Expresión: {expr.()}")
         tokens = lexer(expr, afd, mapping, debug=True)
         entrada = [tok for tok, _ in tokens if tok not in ignore_tokens]
 
