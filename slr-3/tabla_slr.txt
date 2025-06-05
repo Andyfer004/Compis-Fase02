@@ -1,0 +1,38 @@
+🔽 TABLA SLR(1)
+
+📌 ACTION:
+  ACTION[0, LPAREN] = ('shift', 1)
+  ACTION[0, NUMBER] = ('shift', 4)
+  ACTION[1, LPAREN] = ('shift', 1)
+  ACTION[1, NUMBER] = ('shift', 4)
+  ACTION[2, SEMICOLON] = ('shift', 6)
+  ACTION[3, PLUS] = ('shift', 7)
+  ACTION[3, RPAREN] = ('reduce', 'expression', ('term',))
+  ACTION[3, SEMICOLON] = ('reduce', 'expression', ('term',))
+  ACTION[4, PLUS] = ('reduce', 'term', ('NUMBER',))
+  ACTION[4, RPAREN] = ('reduce', 'term', ('NUMBER',))
+  ACTION[4, SEMICOLON] = ('reduce', 'term', ('NUMBER',))
+  ACTION[4, TIMES] = ('shift', 8)
+  ACTION[5, RPAREN] = ('shift', 9)
+  ACTION[6, $] = ('accept',)
+  ACTION[7, LPAREN] = ('shift', 1)
+  ACTION[7, NUMBER] = ('shift', 4)
+  ACTION[8, LPAREN] = ('shift', 1)
+  ACTION[8, NUMBER] = ('shift', 4)
+  ACTION[9, PLUS] = ('reduce', 'term', ('LPAREN', 'expression', 'RPAREN'))
+  ACTION[9, RPAREN] = ('reduce', 'term', ('LPAREN', 'expression', 'RPAREN'))
+  ACTION[9, SEMICOLON] = ('reduce', 'term', ('LPAREN', 'expression', 'RPAREN'))
+  ACTION[10, RPAREN] = ('reduce', 'expression', ('term', 'PLUS', 'expression'))
+  ACTION[10, SEMICOLON] = ('reduce', 'expression', ('term', 'PLUS', 'expression'))
+  ACTION[11, PLUS] = ('reduce', 'term', ('NUMBER', 'TIMES', 'term'))
+  ACTION[11, RPAREN] = ('reduce', 'term', ('NUMBER', 'TIMES', 'term'))
+  ACTION[11, SEMICOLON] = ('reduce', 'term', ('NUMBER', 'TIMES', 'term'))
+
+📌 GOTO:
+  GOTO[0, expression] = 2
+  GOTO[0, term] = 3
+  GOTO[1, expression] = 5
+  GOTO[1, term] = 3
+  GOTO[7, expression] = 10
+  GOTO[7, term] = 3
+  GOTO[8, term] = 11

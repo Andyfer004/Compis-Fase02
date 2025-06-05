@@ -39,16 +39,31 @@ def evaluar_archivo(path_txt, afd_path, yalp_path):
     visualizar_lr0(estados, transiciones, os.path.join(base, base))
     exportar_tabla_slr(tabla, tabla_path)
 
-    # Leer todo el contenido del archivo como una sola cadena
+   
     with open(path_txt, "r", encoding="utf-8") as f:
         contenido = f.read()
+        expresion = ""
+        i = 0
+        while i < len(contenido):
+            c = contenido[i]
+            expresion += c
 
-    # Si el contenido no está vacío o solo tiene espacios, evaluarlo todo junto
-    if not solo_espacios(contenido):
-        evaluar_expresion(
-            contenido, afd, mapping, tabla, producciones, log_path, ignore_tokens
-        )
+            if c == ';':
+                contiene_algo = False
+                j = 0
+                while j < len(expresion):
+                    if expresion[j] not in [' ', '\t', '\n', '\r', ';']:
+                        contiene_algo = True
+                        break
+                    j += 1
 
+                if contiene_algo:
+                    evaluar_expresion(
+                        expresion, afd, mapping, tabla, producciones, log_path, ignore_tokens
+                    )
+
+                expresion = ""
+            i += 1
 
 def evaluar_expresion(expr, afd, mapping, tabla, producciones, log_path, ignore_tokens):
     try:

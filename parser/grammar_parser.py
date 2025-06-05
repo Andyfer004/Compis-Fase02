@@ -100,11 +100,23 @@ def parse_yalp_file(path):
     if not productions:
         raise ValueError("❌ No se encontraron producciones válidas.")
 
-    # ✅ Agregar producción aumentada: S' → start_symbol
+    # ✅ Agregar producción aumentada: S' → ...
     start_symbol_aug = start_symbol + "'"
     while start_symbol_aug in productions:
         start_symbol_aug += "'"
-    productions[start_symbol_aug] = [[start_symbol]]
+
+    # Si existe una producción llamada "general" con reglas ambiguas, forzar expression SEMICOLON
+    if (
+        'general' in productions and
+        any(
+            rule == ['general', 'SEMICOLON', 'expression'] or rule == ['expression']
+            for rule in productions['general']
+        )
+    ):
+        print("🔧 Usando símbolo inicial alternativo: expression SEMICOLON (por ambigüedad en 'general')")
+        productions[start_symbol_aug] = [['expression', 'SEMICOLON']]
+    else:
+        productions[start_symbol_aug] = [[start_symbol]]
 
     return list(tokens), productions, ignore_tokens, start_symbol_aug
 
