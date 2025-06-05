@@ -45,10 +45,10 @@ def lexer(cadena, afd_dict, mapping, debug=True):
 
         token = mapping.get(tag, 'UNKNOWN')
 
-        if debug:
-            print(f"✔️ Token: {token}, lexema: '{lexema}' (tag: {tag})")
-            for est, sym, sig in recorrido:
-                print(f"   {est} --{sym}--> {sig}")
+        # if debug:
+        #     print(f"✔️ Token: {token}, lexema: '{lexema}' (tag: {tag})")
+        #     for est, sym, sig in recorrido:
+        #         print(f"   {est} --{sym}--> {sig}")
 
         tokens.append((token, lexema))
         pos = ultimo_token_pos

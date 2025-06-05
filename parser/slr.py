@@ -1,4 +1,5 @@
 from collections import defaultdict
+import os
 
 def compute_first(productions):
     first = defaultdict(set)
@@ -48,7 +49,7 @@ def compute_follow(productions, first, start_symbol):
 
 def augment_grammar(productions):
     start = list(productions.keys())[0]
-    print(f"🚩 Símbolo inicial detectado: {start}")  # ← AGREGA ESTA LÍNEA
+    #print(f"🚩 Símbolo inicial detectado: {start}")  # ← AGREGA ESTA LÍNEA
     new_start = start + "'"
     return {new_start: [[start]], **productions}, new_start
 
@@ -139,69 +140,61 @@ def construir_tabla_slr(productions, tokens):
             if j is not None:
                 goto_table[i][A] = j
 
-    # Imprimir conflictos encontrados
-    if conflictos:
-        print("\n🚨 Se detectaron conflictos en la tabla SLR:")
-        for estado, simbolo, act1, act2 in conflictos:
-            print(f"  - Estado {estado}, símbolo '{simbolo}': {act1} vs {act2}")
 
     return {'action': dict(action), 'goto': dict(goto_table)}, states, transitions
 
 def parsear_cadena(tokens, tabla, producciones, log_path):
     """
     Analiza la lista de tokens con la tabla SLR.
-    • Escribe en log_path cada paso del parser:
-        STACK […] | INPUT […] | ACTION …
-    • Al final añade “✅ Cadena aceptada.” o el mensaje de error.
-    (No necesitas tocar ningún otro archivo: la firma permanece igual.)
+    • Guarda el trace paso a paso en log_path_trace.txt
+    • Guarda el resultado (aceptado o error) en log_path_resultado.txt
     """
 
-    # ───── preparación ─────────────────────────────────────────────────────
-    pila = [0]                    # la pila guarda *estados* LR
-    tokens = tokens + ['$']       # no modifica la lista original
-    i = 0                         # índice del look-ahead
+    pila = [0]
+    tokens = tokens + ['$']
+    i = 0
 
-    with open(log_path, 'a', encoding='utf-8') as log:
-        log.write("=== TRACE SLR(1) ===\n")
+    # Obtener directorio y base del path
+    base_path = os.path.splitext(log_path)[0]
+    trace_path = base_path + "_trace.txt"
+    resultado_path = base_path + "_resultado.txt"
 
-        # ───── lazo principal ──────────────────────────────────────────────
+    with open(trace_path, 'w', encoding='utf-8') as trace, \
+         open(resultado_path, 'w', encoding='utf-8') as resultado:
+
+        trace.write("=== TRACE SLR(1) ===\n")
+
         while True:
             estado = pila[-1]
-            t      = tokens[i]                # símbolo de entrada
+            t = tokens[i]
             accion = tabla['action'].get(estado, {}).get(t)
 
-            # registro paso a paso
-            log.write(f"STACK {pila} | INPUT {tokens[i:]} | ACTION {accion}\n")
+            trace.write(f"STACK {pila} | INPUT {tokens[i:]} | ACTION {accion}\n")
 
-            # ───────── manejo de errores ─────────
             if accion is None:
-                msg = f"❌ Cadena no aceptada: {t} inesperado.\n"
-                log.write(msg)
-                raise SyntaxError(f"Token inesperado: {t}")
+                msg = (f"❌ Cadena no aceptada: '{t}' inesperado en posición {i}.\n"
+                f"   → Tokens restantes: {tokens[i:]}\n")
+                resultado.write(msg)
+                raise SyntaxError(f"Token inesperado: '{t}' en posición {i}")
 
-            # ───────── shift ─────────
             if accion[0] == 'shift':
-                pila.append(accion[1])        # nuevo estado
+                pila.append(accion[1])
                 i += 1
                 continue
 
-            # ───────── reduce A → β ─────────
             if accion[0] == 'reduce':
                 lhs, rhs = accion[1], accion[2]
-
-                # sacar |β| estados de la pila
                 for _ in rhs:
                     pila.pop()
-
                 goto_estado = tabla['goto'][pila[-1]][lhs]
                 pila.append(goto_estado)
-                log.write(f"   ↳ reduce {lhs} -> {' '.join(rhs)} "
-                          f"(goto {goto_estado})\n")
+                trace.write(f"   ↳ reduce {lhs} -> {' '.join(rhs)} "
+                            f"(goto {goto_estado})\n")
                 continue
 
-            # ───────── accept ─────────
             if accion[0] == 'accept':
-                log.write("✅ Cadena aceptada.\n")
+                resultado.write("✅ Cadena aceptada.\n")
+                print("✅ Cadena aceptada.")
                 return
         
 def exportar_tabla_slr(tabla, filename='tabla_slr.txt'):

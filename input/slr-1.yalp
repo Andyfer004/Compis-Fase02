@@ -13,8 +13,7 @@ IGNORE WHITESPACE
 %%
 
 input:
-    general SEMICOLON /* opcional, último ; */
-  | general
+    general SEMICOLON
 ;
 
 general:
