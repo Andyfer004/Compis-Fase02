@@ -169,7 +169,7 @@ def parsear_cadena(tokens, tabla, producciones, log_path):
             t = tokens[i]
             accion = tabla['action'].get(estado, {}).get(t)
 
-            trace.write(f"STACK {pila} | INPUT {tokens[i:]} | ACTION {accion}\n")
+            trace.write(f" ACTION {accion}\n")
 
             if accion is None:
                 msg = (f"❌ Cadena no aceptada: '{t}' inesperado en posición {i}.\n"

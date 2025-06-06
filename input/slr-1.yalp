@@ -8,9 +8,7 @@
 %token WHITESPACE
 IGNORE WHITESPACE
 
-%start input
 
-%%
 
 input:
     general SEMICOLON
